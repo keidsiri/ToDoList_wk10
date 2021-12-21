@@ -18,6 +18,20 @@ namespace ToDoList.Models
       Id = id;
     }
 
+    public override bool Equals(System.Object otherItem) // Equals() is the built in method
+    {
+      if (!(otherItem is Item))
+      {
+        return false;
+      }
+      else
+      {
+        Item newItem = (Item) otherItem;  // we use typecasting to ensure that otherItem is in fact an Item
+        bool descriptionEquality = (this.Description == newItem.Description);
+        return descriptionEquality;
+      }
+    }
+
     public static List<Item> GetAll()
     {
         List<Item> allItems = new List<Item> { };
@@ -43,12 +57,47 @@ namespace ToDoList.Models
 
     public static void ClearAll()
     {
-      
+      MySqlConnection conn = DB.Connection();
+      conn.Open();
+      var cmd = conn.CreateCommand() as MySqlCommand;
+      cmd.CommandText = @"DELETE FROM items;";
+      cmd.ExecuteNonQuery();   //the execute command that modify the database
+      conn.Close();
+      if (conn != null)
+      {
+      conn.Dispose();
+      }
     }
+
     public static Item Find(int searchId)
     {
       Item placeholderItem = new Item("placeholder item");
       return placeholderItem;
     }
+
+    public void Save()
+    {
+      MySqlConnection conn = DB.Connection();
+      conn.Open();
+      var cmd = conn.CreateCommand() as MySqlCommand;
+
+      // Begin new code
+      cmd.CommandText = @"INSERT INTO items (description) VALUES (@ItemDescription);";
+      MySqlParameter description = new MySqlParameter();
+      description.ParameterName = "@ItemDescription";
+      description.Value = this.Description;
+      cmd.Parameters.Add(description);    
+      cmd.ExecuteNonQuery();
+      // Id = cmd.LastInsertedId;
+
+      // End new code
+      conn.Close();
+      if (conn != null)
+      {
+        conn.Dispose();
+      }
+    }
+
+    
   }
 }
